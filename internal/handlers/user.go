@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/drako02/url-shortener/config"
@@ -11,6 +12,10 @@ type CreateUserRequest struct {
 	FirstName *string `json:"first_name,omitempty"`
 	LastName  *string `json:"last_name,omitempty"`
 	UID       string  `json:"uid" binding:"required"`
+}
+
+type GetUserRequest struct {
+	UID string `json:"uid" binding:"required"`
 }
 
 func CreateUser(payload CreateUserRequest) map[string]any {
@@ -40,5 +45,26 @@ func CreateUser(payload CreateUserRequest) map[string]any {
 		"ID":  user.ID,
 		"UID": payload.UID,
 	}
+
+}
+
+func GetUser(uid string) (map[string]any, error) {
+	var user models.User
+	db := config.DB
+	result := db.Where("uid=?", uid).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+	return map[string]any{
+		"id": user.ID,
+		"uid": user.UID,
+		"firstName": user.FirstName,
+		"lastName": user.LastName,
+		"joinedAt": user.JoinedAt,
+	}, nil
 
 }

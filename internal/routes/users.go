@@ -10,7 +10,7 @@ import (
 func RegisterUserRoutes(r *gin.Engine) {
 	users := r.Group("/users")
 	{
-		users.GET("", getUsers)
+		users.GET("/:uid", getUser)
 		users.POST("", createUser)
 	}
 
@@ -26,7 +26,27 @@ func createUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
-func getUsers(c *gin.Context) {
-    // TODO: Implement get users handler
-    c.JSON(http.StatusOK, gin.H{"message": "Not implemented"})
+func getUser(c *gin.Context) {
+	uid := c.Param("uid")
+	if uid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "uid is required"})
+	}
+	// var request handlers.GetUserRequest
+	// if err := c.ShouldBindJSON(&request); err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{
+	// 		"error": err.Error(),
+	// 	})
+	// 	return
+	// }
+	res, err := handlers.GetUser(uid)
+	if err != nil {
+		status := http.StatusNotFound
+		if err.Error() == "use not found" {
+			status = http.StatusNotFound
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
 }
