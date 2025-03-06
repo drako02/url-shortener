@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/drako02/url-shortener/config"
-	"github.com/drako02/url-shortener/internal/models"
+	"github.com/drako02/url-shortener/models"
 )
 
 func Migrate(){

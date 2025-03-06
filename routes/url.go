@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/drako02/url-shortener/internal/handlers"
+	"github.com/drako02/url-shortener/handlers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,8 +20,13 @@ func create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	result := handlers.CreateShortUrl(request)
+	result, err := handlers.CreateShortUrl(request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
+	c.Header("Location", fmt.Sprintf("/%s", result["short_code"]))
 	c.JSON(http.StatusCreated, result)
 }
 

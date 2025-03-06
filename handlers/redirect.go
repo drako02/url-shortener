@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/drako02/url-shortener/config"
-	"github.com/drako02/url-shortener/internal/models"
+	"github.com/drako02/url-shortener/models"
 )
 func GetLongUrl(shortCode string) (string, error) {
 	var url models.URL;

@@ -5,20 +5,23 @@ import (
 	"time"
 
 	"github.com/drako02/url-shortener/config"
-	"github.com/drako02/url-shortener/internal/models"
+	"github.com/drako02/url-shortener/models"
+	"gorm.io/gorm"
 )
 
 type CreateUserRequest struct {
 	FirstName *string `json:"first_name,omitempty"`
 	LastName  *string `json:"last_name,omitempty"`
 	UID       string  `json:"uid" binding:"required"`
+	Email string `json:"email" binding:"required"`
 }
 
 type GetUserRequest struct {
 	UID string `json:"uid" binding:"required"`
 }
 
-func CreateUser(payload CreateUserRequest) map[string]any {
+// var db *gorm.DB = config.DB
+func CreateUser(payload CreateUserRequest) (*models.User, error) {
 	db := config.DB
 
 	var firstName, lastName string
@@ -33,24 +36,22 @@ func CreateUser(payload CreateUserRequest) map[string]any {
 		LastName:  lastName,
 		UID:       payload.UID,
 		JoinedAt:  time.Now(),
+		Email: payload.Email,
+		
 	}
 
 	result := db.Create(&user)
 	if result.Error != nil {
-		return map[string]any{
-			"error": result.Error.Error(),
-		}
+		return nil, result.Error
 	}
-	return map[string]any{
-		"ID":  user.ID,
-		"UID": payload.UID,
-	}
+	return &user, nil
 
 }
 
-func GetUser(uid string) (map[string]any, error) {
-	var user models.User
+func GetUser(uid string) (*models.User, error) {
 	db := config.DB
+
+	var user models.User
 	result := db.Where("uid=?", uid).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
@@ -59,12 +60,23 @@ func GetUser(uid string) (map[string]any, error) {
 	if result.RowsAffected == 0 {
 		return nil, fmt.Errorf("user not found")
 	}
-	return map[string]any{
-		"id": user.ID,
-		"uid": user.UID,
-		"firstName": user.FirstName,
-		"lastName": user.LastName,
-		"joinedAt": user.JoinedAt,
-	}, nil
+	return &user, nil
 
+}
+
+type ExistsRequest struct{
+	Email string `json:"email" binding:"required"`
+}
+
+func UserExists(request ExistsRequest) (bool, error) {
+	db := config.DB
+	var user models.User
+	result := db.Where("email=?", request.Email).First(&user)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound{
+			return false, nil
+		}
+		return false, result.Error
+	}
+	return true, nil
 }

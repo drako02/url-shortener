@@ -12,5 +12,7 @@ type URL struct {
 	LongUrl   string `gorm:"not null"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	UserId uint `gorm:"column:user_id;index"`
+	User User `gorm:"foreignKey:UserId"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
