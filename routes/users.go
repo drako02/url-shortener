@@ -4,16 +4,24 @@ import (
 	"net/http"
 
 	"github.com/drako02/url-shortener/handlers"
+	"github.com/drako02/url-shortener/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
 func RegisterUserRoutes(r *gin.Engine) {
 	users := r.Group("/users")
+	// users.Use(middlewares.IsAuthenticated())
 
 	{
-		users.GET("/:uid", getUser)
+		// users.GET("/:uid", middlewares.IsAuthenticated(), getUser)
 		users.POST("/exists", userExists)
 		users.POST("", createUser)
+	}
+	protected := r.Group("/")
+	
+	protected.Use(middlewares.IsAuthenticated())
+	{
+		protected.GET("/users/:uid", getUser)
 	}
 
 }
@@ -25,7 +33,7 @@ func createUser(c *gin.Context) {
 		return
 	}
 	res, err := handlers.CreateUser(request)
-	if err != nil{
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -59,15 +67,20 @@ func getUser(c *gin.Context) {
 
 func userExists(c *gin.Context) {
 	var request handlers.ExistsRequest
-	if err := c.ShouldBindJSON(&request); err != nil{
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	exists, err := handlers.UserExists(request)
-	if(err != nil){
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, map[string]bool{"result": exists})
 }
+
+
+// func validateToken(c *gin.Context){
+// 	c.Header()
+// }

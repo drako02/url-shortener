@@ -11,6 +11,7 @@ import (
 func RegisterUrlRoutes(r *gin.Engine) {
 	r.POST("/create", create)
 	r.GET("/:shortCode", handleRedirect)
+	r.POST("/user-urls", getUserUrls)
 }
 
 func create(c *gin.Context) {
@@ -39,4 +40,18 @@ func handleRedirect(c *gin.Context) {
 		return
 	}
 	c.Redirect(http.StatusFound, longUrl)
+}
+
+func getUserUrls(c *gin.Context) {
+	var request handlers.GetUserUrlRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	res, err := handlers.GetUserUrls(request.UID, request.Limit, request.Offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }

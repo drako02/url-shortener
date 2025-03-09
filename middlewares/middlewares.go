@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -18,13 +17,20 @@ func IsAuthenticated() gin.HandlerFunc {
 			log.Println("No auth token provided")
 			return
 		}
+		if len(receivedToken) > 7 && receivedToken[:7] == "Bearer " {
+			log.Printf("receivedToken: %s \n receivedToken[:7]: %s",receivedToken, receivedToken[:7])
+            receivedToken = receivedToken[7:]
+        }
 		token, err := config.FirebaseAuth.VerifyIDToken(c.Request.Context(), receivedToken)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
 			log.Println("Invalid Token")
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"success": fmt.Sprintf("user %s authorized", token.UID)})
+		
+        c.Set("uid", token.UID)
+        log.Printf("User %s authorized", token.UID)
+        
 		c.Next()
 	}
 }
