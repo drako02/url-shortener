@@ -6,6 +6,7 @@ import (
 
 	"github.com/drako02/url-shortener/handlers"
 	"github.com/gin-gonic/gin"
+	"log"
 )
 
 func RegisterUrlRoutes(r *gin.Engine) {
@@ -45,13 +46,24 @@ func handleRedirect(c *gin.Context) {
 func getUserUrls(c *gin.Context) {
 	var request handlers.GetUserUrlRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Print(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 	res, err := handlers.GetUserUrls(request.UID, request.Limit, request.Offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Print(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user urls "})
 		return
 	}
-	c.JSON(http.StatusOK, res)
+
+	recordCount, countError := handlers.GetTotalUrls(request.UID)
+	if countError != nil {
+		log.Print(countError.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error" : "Failed to get total url count for user"})
+		return
+	}
+
+
+	c.JSON(http.StatusOK, gin.H{"urls": res, "recordCount": recordCount})
 }

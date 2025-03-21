@@ -92,6 +92,17 @@ func GetUserUrls(uid string, limit int, offset int) ([]models.URL, error) {
 	return urls, nil
 }
 
+func GetTotalUrls (uid string) (int, error) {
+	var count int64
+	// var urls []models.URL
+	userId, _ := GetIdFromUid(uid)
+	res := config.DB.Table("urls").Where("user_id = ?", userId).Count(&count)
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	return int(count), nil
+}
+
 func truncateString(s string, max int) string {
     if len(s) > max {
         return s[:max] + "..."
