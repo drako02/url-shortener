@@ -41,6 +41,7 @@ func handleRedirect(c *gin.Context) {
 		return
 	}
 	c.Redirect(http.StatusFound, longUrl)
+	handlers.WriteKafkaEvent("redirections", "shortCode", shortCode)
 }
 
 func getUserUrls(c *gin.Context) {

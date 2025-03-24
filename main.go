@@ -16,6 +16,9 @@ func main() {
 	config.InitFirebase()
 	config.InitFirebaseAuth()
 	repositories.Migrate()
+	config.InitKafkaProducer()
+
+	defer config.KafkaProducer.Close()
 
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
@@ -28,4 +31,6 @@ func main() {
 	}))
 	routes.SetUpRoutes(r)
 	r.Run()
+
+	
 }

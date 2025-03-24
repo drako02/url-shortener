@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"log"
+	"os"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
@@ -14,7 +15,9 @@ var FirebaseApp *firebase.App
 var FirebaseAuth *auth.Client
 
 func InitFirebase() {
-	opt := option.WithCredentialsFile("/home/drako/Downloads/url-shortner-784fc-firebase-adminsdk-fbsvc-c7b0277b29.json")
+	credentialsJSON := os.Getenv("FIREBASE_CREDENTIALS")
+
+	opt := option.WithCredentialsJSON([]byte(credentialsJSON))
 	var err error
 	FirebaseApp, err = firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
