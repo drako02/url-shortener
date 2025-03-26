@@ -23,8 +23,8 @@ func IsAuthenticated() gin.HandlerFunc {
         }
 		token, err := config.FirebaseAuth.VerifyIDToken(c.Request.Context(), receivedToken)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
-			log.Println("Invalid Token")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Failed to verify token"})
+			log.Printf("Failed to verify token %s", err.Error())
 			return
 		}
 		

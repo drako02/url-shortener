@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	// "os"
+	"os"
 	// "os/signal"
 
 	// "syscall"
@@ -14,7 +14,7 @@ var KafkaProducer *kafka.Producer
 
 func InitKafkaProducer() error {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost:9092",
+		"bootstrap.servers": os.Getenv("KAFKA_URL"),
 
 		"acks": "all",
 	})
