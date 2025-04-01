@@ -16,9 +16,9 @@ type CreateRequest struct {
 }
 
 type GetUserUrlRequest struct {
-	UID string `json:"uid" binding:"required"`
-	Limit int `json:"limit"`
-	Offset int `json:"offset"`
+	UID    string `json:"uid" binding:"required"`
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
 }
 
 func GetLongUrl(shortCode string) (string, error) {
@@ -70,7 +70,7 @@ func CreateShortUrl(request CreateRequest) (map[string]any, error) {
 
 func GetUserUrls(uid string, limit int, offset int) ([]models.URL, error) {
 	var urls []models.URL
-	id, err:= GetIdFromUid(uid)
+	id, err := GetIdFromUid(uid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user with UID %s: %w", uid, err)
 
@@ -84,15 +84,15 @@ func GetUserUrls(uid string, limit int, offset int) ([]models.URL, error) {
 	fmt.Printf("Retrieved %d URLs for user ID: %d\n", len(urls), id)
 
 	if len(urls) > 0 {
-        fmt.Printf("First URL: ShortCode=%s, LongUrl=%s\n", 
-            urls[0].ShortCode, 
-            truncateString(urls[0].LongUrl, 30))
-    }
+		fmt.Printf("First URL: ShortCode=%s, LongUrl=%s\n",
+			urls[0].ShortCode,
+			truncateString(urls[0].LongUrl, 30))
+	}
 
 	return urls, nil
 }
 
-func GetTotalUrls (uid string) (int, error) {
+func GetTotalUrls(uid string) (int, error) {
 	var count int64
 	// var urls []models.URL
 	userId, _ := GetIdFromUid(uid)
@@ -104,8 +104,8 @@ func GetTotalUrls (uid string) (int, error) {
 }
 
 func truncateString(s string, max int) string {
-    if len(s) > max {
-        return s[:max] + "..."
-    }
-    return s
+	if len(s) > max {
+		return s[:max] + "..."
+	}
+	return s
 }
