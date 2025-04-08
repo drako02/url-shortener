@@ -8,6 +8,7 @@ import (
 
 	"github.com/drako02/url-shortener/config"
 	"github.com/drako02/url-shortener/models"
+	"gorm.io/gorm"
 )
 
 type CreateRequest struct {
@@ -69,6 +70,7 @@ func CreateShortUrl(request CreateRequest) (map[string]any, error) {
 }
 
 func GetUserUrls(uid string, limit int, offset int) ([]models.URL, error) {
+
 	var urls []models.URL
 	id, err := GetIdFromUid(uid)
 	if err != nil {
@@ -76,8 +78,13 @@ func GetUserUrls(uid string, limit int, offset int) ([]models.URL, error) {
 
 	}
 	fmt.Printf("Found user ID: %d for UID: %s\n", id, uid)
+	var res *gorm.DB
+	if limit <= 0 && offset <= 0 {
+		res = config.DB.Where("user_id = ?", id).Find(&urls)
+	} else {
+		res = config.DB.Where("user_id = ?", id).Limit(limit).Offset(offset).Find(&urls)
+	}
 
-	res := config.DB.Where("user_id = ?", id).Limit(limit).Offset(offset).Find(&urls)
 	if res.Error != nil {
 		return nil, res.Error
 	}
