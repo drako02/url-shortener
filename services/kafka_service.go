@@ -1,4 +1,4 @@
-package handlers
+package services
 
 import (
 	"encoding/json"
@@ -8,11 +8,6 @@ import (
 	"github.com/drako02/url-shortener/config"
 	"github.com/drako02/url-shortener/models"
 )
-
-type ClickEvent struct {
-	ShortCode string `json:"shortCode"`
-	UserId    string `json:"userId"`
-}
 
 func WriteKafkaEvent(topic string, key string, value string) {
 	p := config.KafkaProducer

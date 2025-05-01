@@ -1,118 +1,87 @@
 package handlers
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
-	"strings"
+	"log"
+	"net/http"
 
-	"github.com/drako02/url-shortener/config"
-	"github.com/drako02/url-shortener/models"
-	"gorm.io/gorm"
+	"github.com/drako02/url-shortener/services"
+	"github.com/gin-gonic/gin"
 )
 
-type CreateRequest struct {
-	URL string `json:"url" binding:"required,url"`
-	UID string `json:"uid" binding:"required"`
-}
 
-type GetUserUrlRequest struct {
-	UID    string `json:"uid" binding:"required"`
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-}
+func Create(c *gin.Context) {
+	var request services.CreateRequest
 
-func GetLongUrl(shortCode string) (string, error) {
-	var url models.URL
-	db := config.DB
-	result := db.Where("short_code = ?", shortCode).First(&url)
-	if result.Error != nil {
-		return "", result.Error
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
-	return url.LongUrl, nil
-}
-
-func GenerateShortCode() string {
-	b := make([]byte, 4)
-	_, err := rand.Read(b)
+	result, err := services.CreateShortUrl(request)
 	if err != nil {
-		panic(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
-	return strings.TrimRight(base64.URLEncoding.EncodeToString(b), "=")[:6]
 
+	c.Header("Location", fmt.Sprintf("/%s", result["short_code"]))
+	c.JSON(http.StatusCreated, result)
 }
 
-func CreateShortUrl(request CreateRequest) (map[string]any, error) {
-	longUrl := request.URL
-	uid := request.UID
-
-	user := models.User{}
-	result := config.DB.Where("uid = ?", uid).First(&user)
-	if result.Error != nil {
-		return nil, fmt.Errorf("user not found: %w", result.Error)
-	}
-	dbEntry := models.URL{
-		ShortCode: GenerateShortCode(),
-		LongUrl:   longUrl,
-		// CreatedAt: time.Now(),
-		// UpdatedAt: time.Now(),
-		UserId: user.ID,
-	}
-
-	if err := config.DB.Create(&dbEntry).Error; err != nil {
-		return nil, fmt.Errorf("failed to create shortened URL: %w", err)
-	}
-
-	return map[string]any{
-		"short_code": dbEntry.ShortCode,
-		"long_url":   dbEntry.LongUrl,
-	}, nil
-}
-
-func GetUserUrls(uid string, limit int, offset int) ([]models.URL, error) {
-
-	var urls []models.URL
-	id, err := GetIdFromUid(uid)
+func HandleRedirect(c *gin.Context) {
+	shortCode := c.Param("shortCode")
+	fmt.Println(shortCode)
+	longUrl, err := services.GetLongUrl(shortCode)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find user with UID %s: %w", uid, err)
-
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
 	}
-	fmt.Printf("Found user ID: %d for UID: %s\n", id, uid)
-	var res *gorm.DB
-	if limit <= 0 && offset <= 0 {
-		res = config.DB.Where("user_id = ?", id).Find(&urls)
-	} else {
-		res = config.DB.Where("user_id = ?", id).Limit(limit).Offset(offset).Find(&urls)
-	}
-
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	fmt.Printf("Retrieved %d URLs for user ID: %d\n", len(urls), id)
-
-	if len(urls) > 0 {
-		fmt.Printf("First URL: ShortCode=%s, LongUrl=%s\n",
-			urls[0].ShortCode,
-			truncateString(urls[0].LongUrl, 30))
-	}
-
-	return urls, nil
+	c.Redirect(http.StatusFound, longUrl)
+	services.WriteKafkaEvent("redirections", "shortCode", shortCode)
 }
 
-func GetTotalUrls(uid string) (int, error) {
-	var count int64
-	// var urls []models.URL
-	userId, _ := GetIdFromUid(uid)
-	res := config.DB.Table("urls").Where("user_id = ?", userId).Count(&count)
-	if res.Error != nil {
-		return 0, res.Error
+func GetUserUrls(c *gin.Context) {
+	var request services.GetUserUrlRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		log.Print(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
 	}
-	return int(count), nil
+	res, err := services.GetUserUrls(request.UID, request.Limit, request.Offset)
+	if err != nil {
+		log.Print(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user urls "})
+		return
+	}
+
+	recordCount, countError := services.GetTotalUrls(request.UID)
+	if countError != nil {
+		log.Print(countError.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get total url count for user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"urls": res, "recordCount": recordCount})
 }
 
-func truncateString(s string, max int) string {
-	if len(s) > max {
-		return s[:max] + "..."
+func QueryUrls(c *gin.Context){
+	var request services.UrlQuery
+	if err := c.ShouldBindJSON(&request); err != nil {
+		log.Print(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
 	}
-	return s
+
+	log.Printf("request: %v", request)
+
+	urls, count, err := services.UrlQueryResult(request)
+	if err != nil {
+		log.Printf("Failed to query urls for user %s: %v", request.UID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"urls": urls, "length" : count})
 }
+
+
+
