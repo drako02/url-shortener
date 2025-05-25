@@ -45,6 +45,10 @@ func CreateUser(payload CreateUserRequest) (*models.User, error) {
 
 }
 
+// func DeleteUser (){
+// 	db := config.DB
+// }
+
 func GetUser(uid string) (*models.User, error) {
 	db := config.DB
 

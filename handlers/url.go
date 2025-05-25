@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 
+	// "github.com/drako02/url-shortener/models"
 	"github.com/drako02/url-shortener/services"
 	"github.com/gin-gonic/gin"
 )
-
 
 func Create(c *gin.Context) {
 	var request services.CreateRequest
@@ -63,7 +63,7 @@ func GetUserUrls(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"urls": res, "recordCount": recordCount})
 }
 
-func QueryUrls(c *gin.Context){
+func QueryUrls(c *gin.Context) {
 	var request services.UrlQuery
 	if err := c.ShouldBindJSON(&request); err != nil {
 		log.Print(err.Error())
@@ -80,8 +80,32 @@ func QueryUrls(c *gin.Context){
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"urls": urls, "length" : count})
+	c.JSON(http.StatusOK, gin.H{"urls": urls, "length": count})
 }
 
+type URLHandler struct {
+	svc *services.URLService
+}
 
+func NewURLHandler(svc *services.URLService) *URLHandler {
+	return &URLHandler{svc}
+}
 
+func (h *URLHandler) Delete(c *gin.Context) {
+	var request struct{Id uint `json:"id"`}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		log.Printf("%v, id: %d", err, request.Id)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	url, err := h.svc.DeleteURL(request.Id);
+	if  err != nil {
+		log.Printf("Failed to delete URL with id %d: %v", request.Id, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete URL"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"url": url} )
+}
+ 

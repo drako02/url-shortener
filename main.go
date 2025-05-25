@@ -5,6 +5,9 @@ import (
 	"time"
 
 	config "github.com/drako02/url-shortener/config"
+	"github.com/drako02/url-shortener/handlers"
+	"github.com/drako02/url-shortener/services"
+
 	// "github.com/drako02/url-shortener/middlewares"
 	"github.com/drako02/url-shortener/repositories"
 	routes "github.com/drako02/url-shortener/routes"
@@ -18,6 +21,12 @@ func main() {
 	config.InitFirebaseAuth()
 	repositories.Migrate()
 	config.InitKafkaProducer()
+
+	URLRepo := repositories.NewURLRepository(config.DB)
+	URLService := services.NewURLService(URLRepo)
+	URLHandler := handlers.NewURLHandler(URLService)
+
+	appHandlersInstance := routes.NewAppHandler(URLHandler)
 
 	defer config.KafkaProducer.Close()
 
@@ -46,6 +55,6 @@ func main() {
 			return false
 		},
 	}))
-	routes.SetUpRoutes(r)
+	routes.SetUpRoutes(r, appHandlersInstance)
 	r.Run()
 }

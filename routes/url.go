@@ -6,7 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterUrlRoutes(r *gin.Engine) {
+func RegisterUrlRoutes(r *gin.Engine, h *handlers.URLHandler ) {
+	// handler := handlers.NewURLHandler()
 	urls := r.Group("/")
 	urls.Use(middlewares.IsAuthenticated())
 
@@ -14,7 +15,9 @@ func RegisterUrlRoutes(r *gin.Engine) {
 		urls.POST("/create", handlers.Create)
 		urls.POST("/user-urls", handlers.GetUserUrls)
 		urls.POST("/urls", handlers.QueryUrls)
+		urls.DELETE("/urls", h.Delete)
 	}
 	r.GET("/:shortCode", handlers.HandleRedirect)
+	// r.DELETE("/urls", h.Delete)
 
 }

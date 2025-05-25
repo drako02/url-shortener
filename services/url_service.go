@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/drako02/url-shortener/config"
 	"github.com/drako02/url-shortener/models"
+	"github.com/drako02/url-shortener/repositories"
 	"gorm.io/gorm"
 )
 
@@ -31,6 +33,7 @@ func GenerateShortCode() string {
 	return strings.TrimRight(base64.URLEncoding.EncodeToString(b), "=")[:6]
 
 }
+
 
 func CreateShortUrl(request CreateRequest) (map[string]any, error) {
 	longUrl := request.URL
@@ -89,8 +92,12 @@ func GetUserUrls(uid string, limit int, offset int) ([]models.URL, error) {
 
 func GetTotalUrls(uid string) (int, error) {
 	var count int64
-	userId, _ := GetIdFromUid(uid)
-	res := config.DB.Table("urls").Where("user_id = ?", userId).Count(&count)
+	userId, err := GetIdFromUid(uid)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get user id from uid %s: %w", uid, err)
+	}
+
+	res := config.DB.Model(&models.URL{}).Where("user_id = ?", userId).Count(&count)
 	if res.Error != nil {
 		return 0, res.Error
 	}
@@ -228,3 +235,29 @@ func isValidField(field any) bool {
 
 	}
 }
+
+type URLService struct {
+	repo *repositories.URLRepository
+}
+
+func NewURLService (repo *repositories.URLRepository) *URLService{
+	return &URLService{repo}
+}
+
+func (s *URLService) DeleteURL(id uint) (models.URL, error) {
+	ctx := context.Background()
+	return s.repo.Delete(ctx, id)
+}
+
+
+
+
+func _DeleteUrl(shortCode string) error {
+    if err := config.DB.
+        Delete(&models.URL{}, "short_code = ?", shortCode).
+        Error; err != nil {
+        return fmt.Errorf("failed to delete url %q: %w", shortCode, err)
+    }
+    return nil
+}
+
