@@ -15,4 +15,5 @@ type URL struct {
 	UserId    uint           `gorm:"column:user_id;index" json:"user_id"`
 	User      User           `gorm:"foreignKey:UserId" json:"-"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	Active    bool           `json:"active"`
 }

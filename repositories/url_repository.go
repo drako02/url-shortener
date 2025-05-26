@@ -36,3 +36,28 @@ func (r *URLRepository) Delete(ctx context.Context, id uint) (models.URL, error)
 
 	return url, nil
 }
+
+const (
+	// ShortCode string = "short_code"
+	LongUrl string = "long_url"
+	Active  string = "active"
+)
+
+var validFields = map[string]bool{
+	LongUrl: true,
+	Active:  true,
+}
+
+func IsValidUpdateField(field string) bool {
+	return validFields[field]
+}
+
+func (r *URLRepository) UpdateById(ctx context.Context, id uint, field string) (models.URL, error) {
+	valid := IsValidUpdateField(field)
+	if !valid {
+		return models.URL{}, fmt.Errorf("invalid field")
+	}
+
+	return models.URL{ID: id}, nil
+
+}

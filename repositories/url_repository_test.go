@@ -2,8 +2,6 @@ package repositories
 
 import (
 	"context"
-	// "errors"
-	// "fmt"
 	"testing"
 	"time"
 
@@ -223,4 +221,96 @@ func TestDelete(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_IsValidUpdateField(t *testing.T) {
+	type args struct {
+		field string
+	}
+
+	tests := []struct {
+		name string
+		arg  args
+		want bool
+	}{
+		{
+			name: "valid field",
+			arg:  args{"long_url"},
+			want: true,
+		},
+		{
+			name: "invalid field",
+			arg:  args{"id"},
+			want: false,
+		},
+	}
+
+	for _,tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res := IsValidUpdateField(tt.arg.field)
+
+			if res != tt.want{
+				t.Errorf("wanted=%v, got=%v", tt.want, res)
+			}
+		} )
+
+	}
+
+}
+func Test_UpdateById(t *testing.T) {
+	type args struct {
+		ctx   context.Context
+		id    uint
+		field string
+	}
+
+	type fields struct {
+		DB *gorm.DB
+	}
+
+	gormDB, _, err := newMockDB(t)
+
+	if err != nil {
+		t.Errorf("Failed to mock database %v", err)
+	}
+	tests := []struct {
+		name    string
+		field   fields
+		arg     args
+		want    models.URL
+		wantErr bool
+	}{
+		{
+			"valid field",
+			fields{gormDB},
+			args{context.Background(), 123, "long_url"},
+			models.URL{ID: 123},
+			false,
+		},
+		{
+			"invalid field",
+			fields{gormDB},
+			args{context.Background(), 123, "uid"},
+			models.URL{},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &URLRepository{DB: tt.field.DB}
+			url, err := r.UpdateById(tt.arg.ctx, tt.arg.id, tt.arg.field)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("update by id err = %v, wantedErr = %v", err, tt.wantErr)
+			}
+
+			if tt.want != url {
+				t.Errorf("wanted = %v, got = %v", tt.want, url)
+			}
+
+		})
+
+	}
+
 }
