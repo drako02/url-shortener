@@ -10,6 +10,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var loglevel = struct {
+	error  string
+	log    string
+	info string
+	debug  string
+	waring string
+}{
+	"[ERROR]",
+	"[LOG]",
+	"[INFO]",
+	"[DEBUG]",
+	"[WARNING]",
+}
+
 func Create(c *gin.Context) {
 	var request services.CreateRequest
 
@@ -84,15 +98,21 @@ func QueryUrls(c *gin.Context) {
 }
 
 type URLHandler struct {
-	svc *services.URLService
+	svc services.URLManagementService
 }
 
-func NewURLHandler(svc *services.URLService) *URLHandler {
-	return &URLHandler{svc}
+type URLHandlerInterface interface {
+	Delete(c *gin.Context)
+}
+
+func NewURLHandler(svc services.URLManagementService) *URLHandler {
+	return &URLHandler{svc: svc}
 }
 
 func (h *URLHandler) Delete(c *gin.Context) {
-	var request struct{Id uint `json:"id"`}
+	var request struct {
+		Id uint `json:"id"`
+	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		log.Printf("%v, id: %d", err, request.Id)
@@ -100,12 +120,35 @@ func (h *URLHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	url, err := h.svc.DeleteURL(request.Id);
-	if  err != nil {
+	url, err := h.svc.DeleteURL(request.Id)
+	if err != nil {
 		log.Printf("Failed to delete URL with id %d: %v", request.Id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete URL"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"url": url} )
+	c.JSON(http.StatusOK, gin.H{"url": url})
 }
- 
+
+type urlStatusChangeRequest struct {
+	Id    uint `json:"id" binding:"required"`
+	Value *bool `json:"value" binding:"required"`
+}
+
+func (h *URLHandler) UpdateUrlActiveStatus(c *gin.Context) {
+	var req urlStatusChangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("%s Failed to bind JSON for UpdateUrlActiveStatus: %v", loglevel.error, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	err := h.svc.SetUrlActiveStatus(c.Request.Context(), req.Id, *req.Value)
+	if err != nil {
+		log.Printf("%s Failed to set active status of url with id %d: %v", loglevel.error, req.Id, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update URL status. Something went wrong"})
+		return
+	}
+
+	log.Printf("%s URL status updated successfully for ID %d", loglevel.info, req.Id)
+	c.JSON(http.StatusOK, gin.H{"message": "URL status updated"})
+}

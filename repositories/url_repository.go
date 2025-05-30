@@ -19,6 +19,20 @@ func NewURLRepository(db *gorm.DB) *URLRepository {
 	return &URLRepository{DB: db}
 }
 
+type Deleter interface {
+	Delete(ctx context.Context, id uint) (models.URL, error)
+}
+type Updater interface {
+	UpdateById(ctx context.Context, id uint, data Data) error
+}
+
+type RepoInterface interface {
+	Deleter
+	Updater
+}
+
+var _ Deleter = (*URLRepository)(nil)
+
 func (r *URLRepository) Delete(ctx context.Context, id uint) (models.URL, error) {
 	var url models.URL
 
@@ -52,12 +66,27 @@ func IsValidUpdateField(field string) bool {
 	return validFields[field]
 }
 
-func (r *URLRepository) UpdateById(ctx context.Context, id uint, field string) (models.URL, error) {
-	valid := IsValidUpdateField(field)
+type Data struct {
+	Field string `json:"field,omitempty"`
+	Value any    `json:"value,omitempty"`
+}
+
+func (r *URLRepository) UpdateById(ctx context.Context, id uint, data Data) error {
+	valid := IsValidUpdateField(data.Field)
 	if !valid {
-		return models.URL{}, fmt.Errorf("invalid field")
+		return fmt.Errorf("invalid field")
 	}
 
-	return models.URL{ID: id}, nil
+	db := r.DB.WithContext(ctx).Model(&models.URL{}).Where("id = ?", id).Update(data.Field, data.Value)
+
+	if db.Error != nil {
+		return fmt.Errorf("failed to update urls field %s with %v for id %d", data.Field, data.Value, id)
+	}
+
+	if db.RowsAffected == 0 {
+		return fmt.Errorf("%w: %d", ErrNotFound, id)
+	}
+
+	return nil
 
 }

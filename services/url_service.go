@@ -34,7 +34,6 @@ func GenerateShortCode() string {
 
 }
 
-
 func CreateShortUrl(request CreateRequest) (map[string]any, error) {
 	longUrl := request.URL
 	uid := request.UID
@@ -237,27 +236,40 @@ func isValidField(field any) bool {
 }
 
 type URLService struct {
-	repo *repositories.URLRepository
+	// repo repositories.RepoInterface
+	updater repositories.Updater
+	deleter repositories.Deleter
 }
 
-func NewURLService (repo *repositories.URLRepository) *URLService{
-	return &URLService{repo}
+type URLManagementService interface {
+	DeleteURL(id uint) (models.URL, error)
+	SetUrlActiveStatus(ctx context.Context, id uint, value bool) error
+}
+
+func NewURLService(repo repositories.RepoInterface) *URLService {
+	return &URLService{updater: repo, deleter: repo}
 }
 
 func (s *URLService) DeleteURL(id uint) (models.URL, error) {
 	ctx := context.Background()
-	return s.repo.Delete(ctx, id)
+	return s.deleter.Delete(ctx, id)
 }
 
+// func _DeleteUrl(shortCode string) error {
+//     if err := config.DB.
+//         Delete(&models.URL{}, "short_code = ?", shortCode).
+//         Error; err != nil {
+//         return fmt.Errorf("failed to delete url %q: %w", shortCode, err)
+//     }
+//     return nil
+// }
 
+func (s *URLService) SetUrlActiveStatus(ctx context.Context, id uint, value bool) error {
+	err := s.updater.UpdateById(ctx, id, repositories.Data{Field: "active", Value: value})
+	if err != nil {
+		return fmt.Errorf("failed to activate url with id %d: %v", id, err)
+	}
 
-
-func _DeleteUrl(shortCode string) error {
-    if err := config.DB.
-        Delete(&models.URL{}, "short_code = ?", shortCode).
-        Error; err != nil {
-        return fmt.Errorf("failed to delete url %q: %w", shortCode, err)
-    }
-    return nil
+	return nil
 }
 

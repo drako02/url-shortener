@@ -16,6 +16,7 @@ func RegisterUrlRoutes(r *gin.Engine, h *handlers.URLHandler ) {
 		urls.POST("/user-urls", handlers.GetUserUrls)
 		urls.POST("/urls", handlers.QueryUrls)
 		urls.DELETE("/urls", h.Delete)
+		urls.PUT("/set-active", h.UpdateUrlActiveStatus)
 	}
 	r.GET("/:shortCode", handlers.HandleRedirect)
 	// r.DELETE("/urls", h.Delete)
