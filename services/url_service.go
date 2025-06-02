@@ -47,6 +47,7 @@ func CreateShortUrl(request CreateRequest) (map[string]any, error) {
 		ShortCode: GenerateShortCode(),
 		LongUrl:   longUrl,
 		UserId:    user.ID,
+		Active: true,
 	}
 
 	if err := config.DB.Create(&dbEntry).Error; err != nil {
@@ -70,9 +71,9 @@ func GetUserUrls(uid string, limit int, offset int) ([]models.URL, error) {
 	fmt.Printf("Found user ID: %d for UID: %s\n", id, uid)
 	var res *gorm.DB
 	if limit <= 0 && offset <= 0 {
-		res = config.DB.Where("user_id = ?", id).Find(&urls)
+		res = config.DB.Where("user_id = ?", id).Order("created_at DESC").Find(&urls)
 	} else {
-		res = config.DB.Where("user_id = ?", id).Limit(limit).Offset(offset).Find(&urls)
+		res = config.DB.Where("user_id = ?", id).Order("created_at DESC").Limit(limit).Offset(offset).Find(&urls)
 	}
 
 	if res.Error != nil {
