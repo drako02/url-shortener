@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -47,7 +48,7 @@ func CreateShortUrl(request CreateRequest) (map[string]any, error) {
 		ShortCode: GenerateShortCode(),
 		LongUrl:   longUrl,
 		UserId:    user.ID,
-		Active: true,
+		Active:    true,
 	}
 
 	if err := config.DB.Create(&dbEntry).Error; err != nil {
@@ -240,15 +241,17 @@ type URLService struct {
 	// repo repositories.RepoInterface
 	updater repositories.Updater
 	deleter repositories.Deleter
+	getter  repositories.Getter
 }
 
 type URLManagementService interface {
 	DeleteURL(id uint) (models.URL, error)
 	SetUrlActiveStatus(ctx context.Context, id uint, value bool) error
+	URLIsActive(ctx context.Context, id *uint, shortcode *string) (bool, error)
 }
 
 func NewURLService(repo repositories.RepoInterface) *URLService {
-	return &URLService{updater: repo, deleter: repo}
+	return &URLService{updater: repo, deleter: repo, getter: repo}
 }
 
 func (s *URLService) DeleteURL(id uint) (models.URL, error) {
@@ -274,3 +277,17 @@ func (s *URLService) SetUrlActiveStatus(ctx context.Context, id uint, value bool
 	return nil
 }
 
+func (s *URLService) URLIsActive(ctx context.Context, id *uint, shortcode *string) (bool, error) {
+	switch {
+	case id != nil:
+		return false, errors.New("using id not implemented yet ")
+	case shortcode != nil:
+		url, err := s.getter.GetByShortCode(ctx, *shortcode)
+		if err != nil {
+			return false, err
+		}
+		return url.Active, nil
+	default:
+		return false, fmt.Errorf("either id or shortcode must be provided")
+	}
+}

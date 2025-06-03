@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
 	// "github.com/drako02/url-shortener/models"
+	"github.com/drako02/url-shortener/repositories"
 	"github.com/drako02/url-shortener/services"
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +15,7 @@ import (
 var loglevel = struct {
 	error  string
 	log    string
-	info string
+	info   string
 	debug  string
 	waring string
 }{
@@ -41,14 +43,29 @@ func Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, result)
 }
 
-func HandleRedirect(c *gin.Context) {
+func (h *URLHandler) HandleRedirect(c *gin.Context) {
 	shortCode := c.Param("shortCode")
 	fmt.Println(shortCode)
-	longUrl, err := services.GetLongUrl(shortCode)
+	isActive, err := h.svc.URLIsActive(c.Request.Context(), nil, &shortCode)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not resolve url state"})
 		return
 	}
+
+	if !isActive {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "URL is not active"})
+		return
+	}
+
+	longUrl, err := services.GetLongUrl(shortCode)
+	if err != nil {
+		if errors.Is(err, repositories.ErrNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "short code not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "could not retrieve URL"})
+		}
+	}
+
 	c.Redirect(http.StatusFound, longUrl)
 	services.WriteKafkaEvent("redirections", "shortCode", shortCode)
 }
@@ -130,7 +147,7 @@ func (h *URLHandler) Delete(c *gin.Context) {
 }
 
 type urlStatusChangeRequest struct {
-	Id    uint `json:"id" binding:"required"`
+	Id    uint  `json:"id" binding:"required"`
 	Value *bool `json:"value" binding:"required"`
 }
 

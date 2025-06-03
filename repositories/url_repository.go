@@ -22,13 +22,19 @@ func NewURLRepository(db *gorm.DB) *URLRepository {
 type Deleter interface {
 	Delete(ctx context.Context, id uint) (models.URL, error)
 }
+
 type Updater interface {
 	UpdateById(ctx context.Context, id uint, data Data) error
+}
+
+type Getter interface {
+	GetByShortCode(ctx context.Context, shortCode string) (models.URL, error)
 }
 
 type RepoInterface interface {
 	Deleter
 	Updater
+	Getter
 }
 
 var _ Deleter = (*URLRepository)(nil)
@@ -89,4 +95,15 @@ func (r *URLRepository) UpdateById(ctx context.Context, id uint, data Data) erro
 
 	return nil
 
+}
+
+func (r *URLRepository) GetByShortCode(ctx context.Context, shortCode string) (models.URL, error){
+	var url models.URL 
+
+	err := r.DB.WithContext(ctx).Model(&url).Where("short_code = ?", shortCode).First(&url).Error
+	if err != nil {
+		return url, err
+	}
+
+	return url, nil
 }
