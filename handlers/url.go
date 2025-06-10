@@ -1,14 +1,17 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	// "github.com/drako02/url-shortener/models"
 	"github.com/drako02/url-shortener/repositories"
 	"github.com/drako02/url-shortener/services"
+	"github.com/drako02/url-shortener/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,7 +30,7 @@ var loglevel = struct {
 }
 
 func Create(c *gin.Context) {
-	var request services.CreateRequest
+	var request utils.CreateRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -44,34 +47,66 @@ func Create(c *gin.Context) {
 }
 
 func (h *URLHandler) HandleRedirect(c *gin.Context) {
-	shortCode := c.Param("shortCode")
-	fmt.Println(shortCode)
-	isActive, err := h.svc.URLIsActive(c.Request.Context(), nil, &shortCode)
+	start := time.Now()
+	shortcode := c.Param("shortCode")
+
+	info := utils.RedirectInfo{
+		Timestamp:      time.Now(),
+		ShortCode:      shortcode,
+		ClientIP:       c.ClientIP(),
+		UserAgent:      c.Request.UserAgent(),
+		Referer:        c.Request.Referer(),
+		AcceptLanguage: c.GetHeader("Accept-Language"),
+		StatusCode:     http.StatusFound,
+		DurationMs:     int64(time.Since(start)),
+	}
+
+	infoJson, err := json.Marshal(info)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not resolve url state"})
+		log.Printf("%s Failed to marshal RedirectInfo: %v", loglevel.error, err)
+		//Handle case later
+	}
+
+	infoStr := string(infoJson)
+
+	log.Printf("%s Redirect Info: %+v", loglevel.info, infoStr)
+
+	fmt.Println(shortcode)
+	isActive, err := h.svc.URLIsActive(c.Request.Context(), nil, &shortcode)
+	if err != nil {
+		// c.JSON(http.StatusInternalServerError, gin.H{"error": "could not resolve url state"})
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
+			"Title":   "Server Error",
+			"Message": "Sorry, we couldn’t resolve the URL state right now.",
+		})
 		return
 	}
 
 	if !isActive {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "URL is not active"})
+		// c.JSON(http.StatusBadRequest, gin.H{"error": "URL is not active"})
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
+			"Title":   "Bad Request",
+			"Message": "URL has been deactivated by owner",
+		})
 		return
 	}
 
-	longUrl, err := services.GetLongUrl(shortCode)
+	longUrl, err := services.GetLongUrl(shortcode)
 	if err != nil {
 		if errors.Is(err, repositories.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "short code not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "could not retrieve URL"})
 		}
+		return
 	}
 
 	c.Redirect(http.StatusFound, longUrl)
-	services.WriteKafkaEvent("redirections", "shortCode", shortCode)
+	services.WriteKafkaEvent("redirections", "shortCode", infoStr)
 }
 
 func GetUserUrls(c *gin.Context) {
-	var request services.GetUserUrlRequest
+	var request utils.GetUserUrlRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		log.Print(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
@@ -95,7 +130,7 @@ func GetUserUrls(c *gin.Context) {
 }
 
 func QueryUrls(c *gin.Context) {
-	var request services.UrlQuery
+	var request utils.UrlQuery
 	if err := c.ShouldBindJSON(&request); err != nil {
 		log.Print(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})

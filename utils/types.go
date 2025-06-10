@@ -1,4 +1,6 @@
-package services
+package utils
+
+import "time"
 
 // filter condition
 type FilterCondition struct {
@@ -44,10 +46,33 @@ type GetUserUrlRequest struct {
 	Offset int    `json:"offset"`
 }
 
-type ClickEvent struct {
-	ShortCode string `json:"shortCode"`
-	UserId    string `json:"userId"`
+type RedirectInfo struct {
+	Timestamp      time.Time `json:"timestamp"`
+	ShortCode      string    `json:"short_code"`
+	ClientIP       string    `json:"client_ip"`
+	UserAgent      string    `json:"user_agent"`
+	Referer        string    `json:"referer,omitempty"`
+	AcceptLanguage string    `json:"accept_language,omitempty"`
+	StatusCode     int       `json:"status_code"`
+	DurationMs     int64     `json:"duration_ms"`
 }
+
+type ClickEvent struct {
+	UserId         uint    `json:"user_id"`
+	RedirectInfo
+}
+// type ClickEvent struct {
+// 	// ShortCode string `json:"shortCode"`
+// 	UserId         string    `json:"userId"`
+// 	Timestamp      time.Time `json:"timestamp"`
+// 	ShortCode      string    `json:"short_code"`
+// 	ClientIP       string    `json:"client_ip"`
+// 	UserAgent      string    `json:"user_agent"`
+// 	Referer        string    `json:"referer,omitempty"`
+// 	AcceptLanguage string    `json:"accept_language,omitempty"`
+// 	StatusCode     int       `json:"status_code"`
+// 	DurationMs     int64     `json:"duration_ms"`
+// }
 
 type GetUserRequest struct {
 	UID string `json:"uid" binding:"required"`

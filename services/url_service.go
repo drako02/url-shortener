@@ -12,6 +12,7 @@ import (
 	"github.com/drako02/url-shortener/config"
 	"github.com/drako02/url-shortener/models"
 	"github.com/drako02/url-shortener/repositories"
+	"github.com/drako02/url-shortener/utils"
 	"gorm.io/gorm"
 )
 
@@ -35,7 +36,7 @@ func GenerateShortCode() string {
 
 }
 
-func CreateShortUrl(request CreateRequest) (map[string]any, error) {
+func CreateShortUrl(request utils.CreateRequest) (map[string]any, error) {
 	longUrl := request.URL
 	uid := request.UID
 
@@ -115,18 +116,18 @@ func truncateString(s string, max int) string {
 //----------------------------------------------------
 
 const (
-	OperatorEqual       FilterOperator = "eq"
-	OperatorNotEqual    FilterOperator = "ne"
-	OperatorGreaterThan FilterOperator = "gt"
-	OperatorLessThan    FilterOperator = "lt"
-	OperatorContains    FilterOperator = "contains"
-	OperatorStartsWith  FilterOperator = "starts_with"
-	OperatorEndsWith    FilterOperator = "ends_with"
-	OperatorBetween     FilterOperator = "between"
-	OperatorFulltext    FilterOperator = "fulltext"
+	OperatorEqual       utils.FilterOperator = "eq"
+	OperatorNotEqual    utils.FilterOperator = "ne"
+	OperatorGreaterThan utils.FilterOperator = "gt"
+	OperatorLessThan    utils.FilterOperator = "lt"
+	OperatorContains    utils.FilterOperator = "contains"
+	OperatorStartsWith  utils.FilterOperator = "starts_with"
+	OperatorEndsWith    utils.FilterOperator = "ends_with"
+	OperatorBetween     utils.FilterOperator = "between"
+	OperatorFulltext    utils.FilterOperator = "fulltext"
 )
 
-func UrlQueryResult(query UrlQuery) ([]models.URL, int, error) {
+func UrlQueryResult(query utils.UrlQuery) ([]models.URL, int, error) {
 	if query.Limit <= 0 {
 		query.Limit = 10
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/drako02/url-shortener/config"
 	"github.com/drako02/url-shortener/models"
+	"github.com/drako02/url-shortener/utils"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +20,7 @@ func GetIdFromUid(uid string) (uint, error) {
 
 }
 
-func CreateUser(payload CreateUserRequest) (*models.User, error) {
+func CreateUser(payload utils.CreateUserRequest) (*models.User, error) {
 	db := config.DB
 
 	var firstName, lastName string
@@ -65,7 +66,7 @@ func GetUser(uid string) (*models.User, error) {
 
 }
 
-func UserExists(request ExistsRequest) (bool, error) {
+func UserExists(request utils.ExistsRequest) (bool, error) {
 	db := config.DB
 	var user models.User
 	result := db.Where("email=?", request.Email).First(&user)

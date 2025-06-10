@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/drako02/url-shortener/services"
+	"github.com/drako02/url-shortener/utils"
 	"github.com/gin-gonic/gin"
 )
 
-
 func CreateUser(c *gin.Context) {
-	var request services.CreateUserRequest
+	var request utils.CreateUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -42,7 +42,7 @@ func GetUser(c *gin.Context) {
 }
 
 func UserExists(c *gin.Context) {
-	var request services.ExistsRequest
+	var request utils.ExistsRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

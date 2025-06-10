@@ -34,6 +34,7 @@ func main() {
 	exactOrigins := []string{"http://localhost:3000"}
 
 	r := gin.Default()
+	r.LoadHTMLGlob("templates/*.html")
 	r.Use(cors.New(cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},

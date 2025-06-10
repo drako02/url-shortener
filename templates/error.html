@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ .Title }}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    :root {
+      --bg: #f9fafb;
+      --card-bg: #ffffff;
+      --primary: #3b82f6;
+      --error: #ef4444;
+      --text-dark: #111827;
+      --text-medium: #6b7280;
+      --shadow: rgba(0, 0, 0, 0.05);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 16px var(--shadow);
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      padding: 2rem;
+    }
+    .icon {
+      width: 64px; height: 64px;
+      margin-bottom: 1rem;
+      fill: var(--error);
+    }
+    h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    p {
+      color: var(--text-medium);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: 0.375rem;
+      text-decoration: none;
+      transition: background 0.2s ease;
+    }
+    .btn:hover {
+      background: #2563eb;
+    }
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: var(--text-medium);
+    }
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M11.001 10h2v5h-2zm0 7h2v2h-2z"/>
+      <path d="M12 2C6.477 2 2 6.478 2 12c0 5.522 4.478 10 10 10s10-4.478 10-10c0-5.522-4.478-10-10-10zm0 18c-4.411 0-8-3.589-8-8 0-4.411 3.589-8 8-8s8 3.589 8 8c0 4.411-3.589 8-8 8z"/>
+    </svg>
+    <h1>{{ .Title }}</h1>
+    <p>{{ .Message }}</p>
+    <a href="http://localhost:3000" class="btn">Go to Homepage</a>
+    <div class="footer">
+      If the problem persists, please <a href="mailto:support@example.com">contact support</a>.
+    </div>
+  </div>
+</body>
+</html>
