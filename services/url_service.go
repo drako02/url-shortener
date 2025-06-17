@@ -177,6 +177,11 @@ func UrlQueryResult(query utils.UrlQuery) ([]models.URL, int, error) {
 
 			db = db.Where(fmt.Sprintf("CONCAT(%s) LIKE ?", concatArgs), "%"+fmt.Sprint(filter.Value)+"%")
 
+		case OperatorEqual:
+			log.Print("equal")
+			// exact match
+			db = db.Where(fmt.Sprintf("%s = ?", filter.Field), filter.Value)
+
 			// Implement other cases later
 		}
 
@@ -218,6 +223,7 @@ var validFields = map[string]bool{
 	"created_at": true,
 	"updated_at": true,
 	"clicks":     true,
+	"active":     true,
 }
 
 func isValidField(field any) bool {
