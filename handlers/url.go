@@ -46,6 +46,7 @@ func Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, result)
 }
 
+// FIXME redirection time does not represent time it took accurately, time also not in seconds
 func (h *URLHandler) HandleRedirect(c *gin.Context) {
 	start := time.Now()
 	shortcode := c.Param("shortCode")
