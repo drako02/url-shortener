@@ -6,6 +6,7 @@ import (
 
 	"github.com/drako02/url-shortener/config"
 	"github.com/drako02/url-shortener/models"
+	"github.com/drako02/url-shortener/repositories"
 	"github.com/drako02/url-shortener/utils"
 	"gorm.io/gorm"
 )
@@ -77,4 +78,31 @@ func UserExists(request utils.ExistsRequest) (bool, error) {
 		return false, result.Error
 	}
 	return true, nil
+}
+
+type UserService struct {
+	Svc *repositories.UserRepository
+}
+
+func NewUserService(svc *repositories.UserRepository) *UserService {
+	return &UserService{Svc: svc}
+}
+
+type ValidUserFields struct {
+	FirstName string
+	LastName  string
+	Email     string
+}
+
+func (f *ValidUserFields) ToMap() map[string]string {
+	return map[string]string{
+		"first_name": f.FirstName,
+		"last_name":  f.LastName,
+		"email":      f.Email,
+	}
+}
+
+func (svc *UserService) UpdateUserInfo() error {
+	// TODO implement
+	return nil
 }
