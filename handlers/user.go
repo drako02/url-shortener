@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/drako02/url-shortener/services"
@@ -54,4 +55,23 @@ func UserExists(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, map[string]bool{"result": exists})
+}
+
+type UserHandler struct {
+	Svc *services.UserService
+}
+
+func NewUserHandler(svc *services.UserService) *UserHandler {
+	return &UserHandler{svc}
+}
+
+func (hnd *UserHandler) Update(c *gin.Context) {
+	//TODO continue implementation
+	// TODO look  into getting the user's id from the token in the middleware
+	request := services.ValidUserFields{}
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		log.Printf("%s ")
+		return
+	}
 }

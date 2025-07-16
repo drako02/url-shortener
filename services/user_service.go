@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -81,28 +82,37 @@ func UserExists(request utils.ExistsRequest) (bool, error) {
 }
 
 type UserService struct {
-	Svc *repositories.UserRepository
+	Repo *repositories.UserRepository
 }
 
 func NewUserService(svc *repositories.UserRepository) *UserService {
-	return &UserService{Svc: svc}
+	return &UserService{svc}
 }
 
 type ValidUserFields struct {
-	FirstName string
-	LastName  string
-	Email     string
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
 }
 
 func (f *ValidUserFields) ToMap() map[string]string {
-	return map[string]string{
-		"first_name": f.FirstName,
-		"last_name":  f.LastName,
-		"email":      f.Email,
-	}
+    result := make(map[string]string)
+    if f.FirstName != "" {
+        result["first_name"] = f.FirstName
+    }
+    if f.LastName != "" {
+        result["last_name"] = f.LastName
+    }
+    if f.Email != "" {
+        result["email"] = f.Email
+    }
+    return result
 }
 
-func (svc *UserService) UpdateUserInfo() error {
-	// TODO implement
+func (svc *UserService) UpdateUserInfo(id uint, fields ValidUserFields , ctx context.Context) error {
+	err := svc.Repo.UpdateById(id, fields.ToMap(), ctx)
+	if err != nil {
+		return fmt.Errorf("failed to update user info: %v", err)
+	}
 	return nil
 }
