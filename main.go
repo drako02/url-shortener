@@ -22,11 +22,17 @@ func main() {
 	repositories.Migrate()
 	config.InitKafkaProducer()
 
+	// URL config
 	URLRepo := repositories.NewURLRepository(config.DB)
 	URLService := services.NewURLService(URLRepo)
 	URLHandler := handlers.NewURLHandler(URLService)
 
-	appHandlersInstance := routes.NewAppHandler(URLHandler)
+	// User Config
+	UserRepo := repositories.NewUserRepository(config.DB)
+	UserService := services.NewUserService(UserRepo)
+	UserHandler := handlers.NewUserHandler(UserService)
+
+	appHandlersInstance := routes.NewAppHandler(URLHandler, UserHandler)
 
 	defer config.KafkaProducer.Close()
 

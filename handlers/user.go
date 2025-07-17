@@ -66,12 +66,37 @@ func NewUserHandler(svc *services.UserService) *UserHandler {
 }
 
 func (hnd *UserHandler) Update(c *gin.Context) {
-	//TODO continue implementation
-	// TODO look  into getting the user's id from the token in the middleware
+	uid, exists := c.Get("uid")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "could not authenticate user"})
+		return
+	}
+
+	typedUid, ok := uid.(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "could not authenticate user"})
+		return
+	}
+
+	id, getIdError := services.GetIdFromUid(typedUid)
+	if getIdError != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
 	request := services.ValidUserFields{}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
-		log.Printf("%s ")
+		log.Printf("%s Error binding JSON in Update for user with id %d: %v", loglevel.error, id, err)
 		return
 	}
+
+	err := hnd.Svc.UpdateUserInfo(id, request, c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user details"})
+		log.Printf("%s Error updating user with id %d: %v", loglevel.error, id, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
 }

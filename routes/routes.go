@@ -7,11 +7,12 @@ import (
 
 type AppHandlers struct {
 	URLHandler *handlers.URLHandler
+	UserHandler *handlers.UserHandler
 	// Update with other handler layers - eg userhandler
 }
 
-func NewAppHandler(urlHnd *handlers.URLHandler) *AppHandlers{
-	return &AppHandlers{ URLHandler: urlHnd}
+func NewAppHandler(urlHnd *handlers.URLHandler, userHnd *handlers.UserHandler) *AppHandlers{
+	return &AppHandlers{ URLHandler: urlHnd, UserHandler: userHnd}
 }
 
 func SetUpRoutes(r *gin.Engine, appHandlers *AppHandlers) {
@@ -21,6 +22,10 @@ func SetUpRoutes(r *gin.Engine, appHandlers *AppHandlers) {
 
 	}
 
+	if appHandlers.UserHandler != nil {
+		RegisterUserRoutes(r, appHandlers.UserHandler)
+	}
+
 	// handle later to cater for user handlers
-	RegisterUserRoutes(r)
+	// RegisterUserRoutes(r)
 }
