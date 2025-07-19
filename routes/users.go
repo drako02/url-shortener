@@ -16,7 +16,7 @@ func RegisterUserRoutes(r *gin.Engine, handler *handlers.UserHandler) {
 
 	protected := r.Group("/")
 
-	protected.Use(middlewares.IsAuthenticated())
+	protected.Use(middlewares.IsAuthenticated(), middlewares.LogRequest())
 	{
 		protected.GET("/users/:uid", handlers.GetUser)
 		protected.PATCH("/user/", handler.Update) // TODO Test this endpoint

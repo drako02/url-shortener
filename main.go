@@ -7,6 +7,7 @@ import (
 	config "github.com/drako02/url-shortener/config"
 	"github.com/drako02/url-shortener/handlers"
 	"github.com/drako02/url-shortener/services"
+	"github.com/go-playground/validator"
 
 	// "github.com/drako02/url-shortener/middlewares"
 	"github.com/drako02/url-shortener/repositories"
@@ -21,6 +22,9 @@ func main() {
 	config.InitFirebaseAuth()
 	repositories.Migrate()
 	config.InitKafkaProducer()
+
+	config.Validate = validator.New()
+
 
 	// URL config
 	URLRepo := repositories.NewURLRepository(config.DB)

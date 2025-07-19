@@ -22,8 +22,13 @@ func (repo *UserRepository) UpdateById(id uint, fields map[string]string, ctx co
 		return fmt.Errorf("invalid User field(s) to update %v", fields)
 	}
 
+	updateFields := make(map[string]interface{}, len(fields))
+    for k, v := range fields {
+        updateFields[k] = v
+    }
+
 	err := repo.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return tx.WithContext(ctx).Model(&models.User{}).Where("id = ?", id).Updates(fields).Error
+		return tx.WithContext(ctx).Model(&models.User{}).Where("id = ?", id).Updates(updateFields).Error
 	})
 
 	if err != nil {

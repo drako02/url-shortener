@@ -87,14 +87,14 @@ func (hnd *UserHandler) Update(c *gin.Context) {
 	request := services.ValidUserFields{}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
-		log.Printf("%s Error binding JSON in Update for user with id %d: %v", loglevel.error, id, err)
+		log.Printf("%s Error binding JSON in Update for user with id %d: %v ", Loglevel.Error, id, err)
 		return
 	}
 
 	err := hnd.Svc.UpdateUserInfo(id, request, c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user details"})
-		log.Printf("%s Error updating user with id %d: %v", loglevel.error, id, err)
+		log.Printf("%s Error updating user with id %d: %v", Loglevel.Error, id, err)
 		return
 	}
 

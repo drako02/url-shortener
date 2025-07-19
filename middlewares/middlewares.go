@@ -1,10 +1,13 @@
 package middlewares
 
 import (
+	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/drako02/url-shortener/config"
+	"github.com/drako02/url-shortener/handlers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,6 +34,16 @@ func IsAuthenticated() gin.HandlerFunc {
         c.Set("uid", token.UID)
         log.Printf("User %s authorized", token.UID)
         
+		c.Next()
+	}
+}
+
+func LogRequest() gin.HandlerFunc {
+	return func(c *gin.Context){
+		requestBodyBytes,_ := io.ReadAll(c.Request.Body)
+		requestBody := string(requestBodyBytes)
+		log.Printf("%s Request: %s", handlers.Loglevel.Info, requestBody)
+		c.Request.Body = io.NopCloser(strings.NewReader(requestBody))
 		c.Next()
 	}
 }

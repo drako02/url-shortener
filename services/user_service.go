@@ -92,7 +92,7 @@ func NewUserService(svc *repositories.UserRepository) *UserService {
 type ValidUserFields struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
+	Email     string `json:"email" validate:"email"`
 }
 
 func (f *ValidUserFields) ToMap() map[string]string {
@@ -109,7 +109,15 @@ func (f *ValidUserFields) ToMap() map[string]string {
     return result
 }
 
+func (f *ValidUserFields) Validate () error {
+	return config.Validate.Struct(f)
+} 
+
 func (svc *UserService) UpdateUserInfo(id uint, fields ValidUserFields , ctx context.Context) error {
+	if err := fields.Validate(); err != nil {
+		return err
+	}
+	
 	err := svc.Repo.UpdateById(id, fields.ToMap(), ctx)
 	if err != nil {
 		return fmt.Errorf("failed to update user info: %v", err)

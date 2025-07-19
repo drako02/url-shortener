@@ -15,12 +15,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var loglevel = struct {
-	error  string
-	log    string
-	info   string
-	debug  string
-	waring string
+var Loglevel = struct {
+	Error  string
+	Log    string
+	Info   string
+	Debug  string
+	Warning string
 }{
 	"[ERROR]",
 	"[LOG]",
@@ -64,13 +64,13 @@ func (h *URLHandler) HandleRedirect(c *gin.Context) {
 
 	infoJson, err := json.Marshal(info)
 	if err != nil {
-		log.Printf("%s Failed to marshal RedirectInfo: %v", loglevel.error, err)
+		log.Printf("%s Failed to marshal RedirectInfo: %v", Loglevel.Error, err)
 		//Handle case later
 	}
 
 	infoStr := string(infoJson)
 
-	log.Printf("%s Redirect Info: %+v", loglevel.info, infoStr)
+	log.Printf("%s Redirect Info: %+v", Loglevel.Info, infoStr)
 
 	fmt.Println(shortcode)
 	isActive, err := h.svc.URLIsActive(c.Request.Context(), nil, &shortcode)
@@ -190,18 +190,18 @@ type urlStatusChangeRequest struct {
 func (h *URLHandler) UpdateUrlActiveStatus(c *gin.Context) {
 	var req urlStatusChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("%s Failed to bind JSON for UpdateUrlActiveStatus: %v", loglevel.error, err)
+		log.Printf("%s Failed to bind JSON for UpdateUrlActiveStatus: %v", Loglevel.Error, err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
 	err := h.svc.SetUrlActiveStatus(c.Request.Context(), req.Id, *req.Value)
 	if err != nil {
-		log.Printf("%s Failed to set active status of url with id %d: %v", loglevel.error, req.Id, err)
+		log.Printf("%s Failed to set active status of url with id %d: %v", Loglevel.Error, req.Id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update URL status. Something went wrong"})
 		return
 	}
 
-	log.Printf("%s URL status updated successfully for ID %d", loglevel.info, req.Id)
+	log.Printf("%s URL status updated successfully for ID %d", Loglevel.Info, req.Id)
 	c.JSON(http.StatusOK, gin.H{"message": "URL status updated"})
 }
