@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterUrlRoutes(r *gin.Engine, h *handlers.URLHandler ) {
+func RegisterUrlRoutes(r *gin.Engine, h *handlers.URLHandler) {
 	// handler := handlers.NewURLHandler()
 	urls := r.Group("/")
-	urls.Use(middlewares.IsAuthenticated())
+	urls.Use(middlewares.IsAuthenticated(), middlewares.LogRequest())
 
 	{
 		urls.POST("/create", handlers.Create)

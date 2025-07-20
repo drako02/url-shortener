@@ -91,12 +91,12 @@ func (hnd *UserHandler) Update(c *gin.Context) {
 		return
 	}
 
-	err := hnd.Svc.UpdateUserInfo(id, request, c.Request.Context())
+	user, err := hnd.Svc.UpdateUserInfo(id, request, c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user details"})
 		log.Printf("%s Error updating user with id %d: %v", Loglevel.Error, id, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully", "data": *user})
 }

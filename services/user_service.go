@@ -90,37 +90,41 @@ func NewUserService(svc *repositories.UserRepository) *UserService {
 }
 
 type ValidUserFields struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email" validate:"email"`
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
+	Email     string `json:"email,omitempty" validate:"omitempty,email"`
 }
 
 func (f *ValidUserFields) ToMap() map[string]string {
-    result := make(map[string]string)
-    if f.FirstName != "" {
-        result["first_name"] = f.FirstName
-    }
-    if f.LastName != "" {
-        result["last_name"] = f.LastName
-    }
-    if f.Email != "" {
-        result["email"] = f.Email
-    }
-    return result
+	result := make(map[string]string)
+	if f.FirstName != "" {
+		result["first_name"] = f.FirstName
+	}
+	if f.LastName != "" {
+		result["last_name"] = f.LastName
+	}
+	if f.Email != "" {
+		result["email"] = f.Email
+	}
+	return result
 }
 
-func (f *ValidUserFields) Validate () error {
-	return config.Validate.Struct(f)
-} 
+func (f *ValidUserFields) Validate() error {
+	if f.FirstName == "" && f.LastName == "" && f.Email == "" {
+		return fmt.Errorf("at least one field must be provided")
+	}
 
-func (svc *UserService) UpdateUserInfo(id uint, fields ValidUserFields , ctx context.Context) error {
+	return config.Validate.Struct(f)
+}
+
+func (svc *UserService) UpdateUserInfo(id uint, fields ValidUserFields, ctx context.Context) (*models.User, error) {
 	if err := fields.Validate(); err != nil {
-		return err
+		return nil, err
 	}
-	
-	err := svc.Repo.UpdateById(id, fields.ToMap(), ctx)
+
+	user, err := svc.Repo.UpdateById(id, fields.ToMap(), ctx)
 	if err != nil {
-		return fmt.Errorf("failed to update user info: %v", err)
+		return nil, fmt.Errorf("failed to update user info: %v", err)
 	}
-	return nil
+	return user, nil
 }

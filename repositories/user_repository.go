@@ -16,32 +16,32 @@ func NewUserRepository(DB *gorm.DB) *UserRepository {
 	return &UserRepository{DB}
 }
 
-func (repo *UserRepository) UpdateById(id uint, fields map[string]string, ctx context.Context) error {
+func (repo *UserRepository) UpdateById(id uint, fields map[string]string, ctx context.Context) (*models.User, error) {
 	ok := isValidUserField(fields)
 	if !ok {
-		return fmt.Errorf("invalid User field(s) to update %v", fields)
+		return nil, fmt.Errorf("invalid User field(s) to update %v", fields)
 	}
 
 	updateFields := make(map[string]interface{}, len(fields))
-    for k, v := range fields {
-        updateFields[k] = v
-    }
-
+	for k, v := range fields {
+		updateFields[k] = v
+	}
+	user := models.User{}
 	err := repo.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return tx.WithContext(ctx).Model(&models.User{}).Where("id = ?", id).Updates(updateFields).Error
+		return tx.WithContext(ctx).Model(&user).Where("id = ?", id).Updates(updateFields).Error
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to update user with id %d: %w", id, err)
+		return nil, fmt.Errorf("failed to update user with id %d: %w", id, err)
 	}
 
-	return nil
+	return &user, nil
 }
 
 var validUserFields = map[string]bool{
 	"first_name": true,
 	"last_name":  true,
-	"email":     true,
+	"email":      true,
 }
 
 func isValidUserField(fields map[string]string) bool {
