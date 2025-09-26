@@ -1,0 +1,77 @@
+name: GitHub Actions Demo
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.3'
+
+      # Implement running of tests later
+      
+      - name: Build go app
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o myapp .
+
+      # Create deployment package
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          cp myapp deploy/
+          tar -czf deploy.tar.gz deploy/
+
+      # Deploy to my vm via ssh
+      - name: Deploy to Azure VM
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_KEY }}
+          port: 22
+          script: |
+            sudo systemctl stop myapp || echo "Service not running"
+
+            sudo mkdir -p /opt/myapp
+
+            sudo rm -rf /opt/myapp/*
+
+      # Copy files to vm
+      - name: Copy files to Azure VM
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_KEY }}
+          port: 22
+          source: "deploy.tar.gz"
+          target: "/tmp/"
+
+      # Extract and set up application on Azure VM 
+      - name: Set up application on Azure VM
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_KEY }}
+          port: 22
+          script: |
+            cd /tmp
+            tar -xzf deploy.tar.gz
+            
+            sudo mv deploy/* /opt/myapp/
+            sudo chown -R ${{ secrets.AZURE_VM_USERNAME }}:${{ secrets.AZURE_VM_USERNAME }} /opt/myapp
+            sudo chmod +x /opt/myapp/myapp
+
+            sudo systemctl start myapp
+            sudo systemctl enable myapp
+
+            sleep 5
+            sudo systemctl status myapp
