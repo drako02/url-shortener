@@ -41,7 +41,7 @@ jobs:
 
             sudo mkdir -p /opt/myapp
 
-            sudo rm -rf /opt/myapp/*
+            sudo rm -rf /opt/myapp/* || true
 
       # Copy files to vm
       - name: Copy files to Azure VM
