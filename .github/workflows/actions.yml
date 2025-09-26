@@ -34,7 +34,7 @@ jobs:
         with:
           host: ${{ secrets.AZURE_VM_HOST }}
           username: ${{ secrets.AZURE_VM_USERNAME }}
-          key: ${{ secrets.AZURE_VM_KEY }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
           port: 22
           script: |
             sudo systemctl stop myapp || echo "Service not running"
@@ -49,7 +49,7 @@ jobs:
         with:
           host: ${{ secrets.AZURE_VM_HOST }}
           username: ${{ secrets.AZURE_VM_USERNAME }}
-          key: ${{ secrets.AZURE_VM_KEY }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
           port: 22
           source: "deploy.tar.gz"
           target: "/tmp/"
@@ -60,7 +60,7 @@ jobs:
         with:
           host: ${{ secrets.AZURE_VM_HOST }}
           username: ${{ secrets.AZURE_VM_USERNAME }}
-          key: ${{ secrets.AZURE_VM_KEY }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
           port: 22
           script: |
             cd /tmp
