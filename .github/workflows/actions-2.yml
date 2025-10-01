@@ -34,7 +34,10 @@ jobs:
           port: 22
           script: |
             echo "${{ secrets.DOCKER_CI_TOKEN }}" | docker login -u ${{ vars.DOCKER_HUB_USERNAME }} --password-stdin
-            docker pull drako02/drako:latest
-            docker stop url-shortener || true
-            docker rm url-shortener || true
-            docker run -d --name url-shortener -p 8080:8080 drako02/drako:latest
+            # docker pull drako02/drako:latest
+            # docker stop url-shortener || true
+            # docker rm url-shortener || true
+            # docker run -d --name url-shortener -p 8080:8080 drako02/drako:latest
+            cd ~/url-shortener-compose
+            docker compose pull
+            docker compose up -d --remove-orphans go_backend
