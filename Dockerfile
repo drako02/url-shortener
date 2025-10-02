@@ -25,6 +25,7 @@ RUN apk add --no-cache librdkafka ca-certificates
 WORKDIR /
 
 COPY --from=build-stage  /url-shortener /url-shortener
+COPY --from=build-stage /app/templates /templates 
 
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
