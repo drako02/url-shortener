@@ -1,163 +1,130 @@
-# URL Shortener
+<div align="center">
 
-A robust URL shortening service built with Go. It offers secure user authentication, detailed URL management, and analytics capabilities.
+# 🔗 URL Shortener
+
+**A production-ready URL shortening service with Firebase authentication and event-driven analytics**
+
+[![Go Version](https://img.shields.io/badge/Go-1.23.3-00ADD8?style=flat&logo=go)](https://golang.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)](https://firebase.google.com)
+
+[Features](#-features) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [API](#-api-overview)
+
+</div>
+
+---
+
+## Motivation
+
+Built to explore event-driven architecture and clean design patterns in Go. This project goes beyond basic URL shortening—it demonstrates asynchronous event processing with Kafka, secure authentication flows, and testable repository patterns. Perfect for understanding how to structure scalable backend services.
 
 ## Features
 
-- **URL Shortening**: Generate shortened URLs that redirect to original destinations.
-- **User Authentication**: Secure Firebase-based authentication system.
-- **User Management**: Create, manage, and verify user accounts.
-- **URL Management**: Create, list, and track shortened URLs per user with pagination.
-- **Analytics**: Gather insights on URL usage and performance.
-- **PostgreSQL Database**: Reliable data persistence powered by GORM ORM.
-- **RESTful API**: Well-structured API endpoints for all operations.
+- **URL Shortening** – Generate unique short codes with automatic collision handling
+- **Smart Redirection** – Fast redirects with click event tracking
+- **Firebase Auth** – Token-based authentication with Google's infrastructure
+- **User Management** – Per-user URL tracking with pagination support
+- **Event-Driven Analytics** – Non-blocking Kafka integration for click metrics
+- **Clean Architecture** – Testable layers (handlers → services → repositories)
 
-## Technologies
+## Tech Stack
 
-- **Backend**: Go (Golang) with the Gin web framework
-- **Database**: PostgreSQL with GORM ORM
-- **Authentication**: Firebase Authentication
-- **Environment Management**: godotenv for configuration
+**Backend** – Go, Gin Web Framework  
+**Database** – PostgreSQL with GORM ORM  
+**Authentication** – Firebase Admin SDK  
+**Messaging** – Apache Kafka (Confluent)  
+**Testing** – Testify, SQL Mock
 
-## Prerequisites
+## Learnt
 
-- Go 1.23 or higher
-- PostgreSQL database
-- Firebase project with authentication enabled
+- Implementing **repository pattern** for clean separation of concerns
+- Using **Kafka for async processing** without blocking HTTP requests
+- Writing **testable Go code** with dependency injection and mocks
+- Integrating **Firebase Admin SDK** for production-grade auth
+- Handling **database migrations** and relationships with GORM
 
-## Installation
+## 🚀 Quick Start
 
-1. Clone the repository:
+**Prerequisites:** Go 1.23+, PostgreSQL, Firebase project
 
-   ```bash
-   git clone https://github.com/drako02/url-shortener.git
-   cd url-shortener
-   ```
+```bash
+# Clone and install
+git clone https://github.com/drako02/url-shortener.git
+cd url-shortener
+go mod download
 
-2. Install dependencies:
+# Configure environment (.env)
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=url_shortener
 
-   ```bash
-   go mod download
-   ```
+# Run
+go run main.go
+```
 
-3. Create a `.env` file in the project root with the following variables:
+Server starts at `http://localhost:8080`
 
-   ```
-   DB_USER=your_db_user
-   DB_PASSWORD=your_db_password
-   DB_NAME=your_db_name
-   ```
+## API Overview
 
-4. Place your Firebase admin SDK credentials in a secure location and update the path in `config/firebase-admin.go`.
+```http
+POST   /create              # Create shortened URL
+GET    /:shortCode          # Redirect to original URL
+POST   /user-urls           # Get user's URLs (paginated)
+POST   /users               # Create user
+POST   /users/exists        # Check user existence
+GET    /users/:uid          # Get user details
+```
 
-5. Run the application:
+**Example:**
+```bash
+curl -X POST http://localhost:8080/create \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "uid": "user123"}'
+```
 
-   ```bash
-   go run main.go
-   ```
+**Response:**
+```json
+{
+  "short_code": "abc123",
+  "original_url": "https://example.com",
+  "created_at": "2026-01-26T10:00:00Z"
+}
+```
 
-   The server will start on `http://localhost:8080` by default.
+## Testing
 
-## API Documentation
+```bash
+go test ./... -v
+```
 
-### URL Endpoints
+Includes unit tests for services, repositories, and handlers with mocked dependencies.
 
-#### Create a shortened URL
-- **POST** `/create`
-- **Body**: 
-    ```json
-    {
-        "url": "https://example.com/long-url",
-        "uid": "user_id"
-    }
-    ```
-- **Response**: Returns the created shortened URL with a corresponding short code.
+## Future Plans
 
-#### Access a shortened URL
-- **GET** `/:shortCode`
-- **Response**: Redirects to the original URL.
-
-#### Get user's URLs
-- **POST** `/user-urls`
-- **Body**:
-    ```json
-    {
-        "uid": "user_id",
-        "limit": 10,
-        "offset": 0
-    }
-    ```
-- **Response**: Provides a paginated list of the user's shortened URLs.
-
-### User Endpoints
-
-#### Create a new user
-- **POST** `/users`
-- **Body**: User details including UID from Firebase.
-- **Response**: Returns the created user details.
-
-#### Check if user exists
-- **POST** `/users/exists`
-- **Body**: Email to check.
-- **Response**: Boolean indicating if the user exists.
-
-#### Get user details
-- **GET** `/users/:uid`
-- **Response**: Provides detailed user information.
-- **Note**: This endpoint requires authentication.
+- [ ] Analytics dashboard with real-time metrics
+- [ ] Custom domain support for branded links
+- [ ] QR code generation
+- [ ] Rate limiting and abuse prevention
+- [ ] Link expiration and password protection
 
 ## Project Structure
 
 ```
-url_shortener/
-├── config/           # Database and Firebase configuration files
-├── handlers/         # Request handlers for API endpoints
-├── middlewares/      # Authentication and other middleware functions
-├── models/           # Database models
-├── repositories/     # Database operations and data access layers
-├── routes/           # API route definitions
-├── .env              # Environment variables (not tracked in git)
-├── go.mod            # Go module dependencies
-├── go.sum            # Go module checksums
-└── main.go           # Application entry point
+├── handlers/       # HTTP request handlers
+├── services/       # Business logic layer
+├── repositories/   # Data access layer
+├── models/         # Domain models
+├── routes/         # Route definitions
+├── config/         # Database, Firebase, Kafka setup
+└── middlewares/    # Authentication middleware
 ```
 
-## Configuration
+---
 
-### Database Configuration
+<div align="center">
 
-Database connection is configured in `config/database.go`. The application uses PostgreSQL with the following environment variables:
+**Built by [drako02](https://github.com/drako02)**
 
-- `DB_USER`: Database username
-- `DB_PASSWORD`: Database password
-- `DB_NAME`: Database name
+[Report Bug](https://github.com/drako02/url-shortener/issues) • [View More Projects](https://github.com/drako02)
 
-### Firebase Configuration
-
-Firebase authentication is set up in `config/firebase-admin.go`. You need to provide the path to your Firebase Admin SDK credentials file.
-
-## Development
-
-To run the application in development mode:
-
-```bash
-go run main.go
-```
-
-The server will automatically launch on `http://localhost:8080`.
-
-## Contributing
-
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit your changes: `git commit -am 'Add feature'`
-4. Push the branch: `git push origin feature-name`
-5. Submit a pull request.
-
-## License
-
-[MIT License](LICENSE)
-
-## Contact
-
-Project maintained by [drako02](https://github.com/drako02)
+</div>
